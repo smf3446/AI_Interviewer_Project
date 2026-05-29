@@ -34,14 +34,16 @@ BATCH_SIZE = 15         # 10~20 권장. 에러 나면 8~10으로 낮추기.
 # =========================================================
 from getpass import getpass
 from openai import OpenAI
+from dotenv import load_dotenv
 
-if "OPENAI_API_KEY" not in os.environ:
-    os.environ["OPENAI_API_KEY"] = getpass("OpenAI API Key 입력: ")
+load_dotenv()
 
-client = OpenAI()
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
 # =========================================================
-# 3. 원본 JSON에서 필요한 속성 추출
+# 3. 원본 JSON에서 필요한 속성 추출 
 # =========================================================
 
 def build_neutral_prompt(batch):
@@ -79,6 +81,7 @@ def extract_record(file_path):
     question = safe_get(obj, ["dataSet", "question", "raw", "text"], "")
     answer = safe_get(obj, ["dataSet", "answer", "raw", "text"], "")
     answer_summary = safe_get(obj, ["dataSet", "answer", "summary", "text"], "")
+    experience = safe_get(obj, ["dataSet", "info", "experience"], "")
 
     # answer raw가 비어 있으면 summary라도 사용
     candidate_answer = answer.strip() if answer.strip() else answer_summary.strip()
@@ -87,6 +90,7 @@ def extract_record(file_path):
         "source_file": file_path,
         "base_id": make_base_id(file_path),
         "job_role": occupation,
+        "experience": experience,
         "question": question.strip(),
         "candidate_answer": candidate_answer,
         "has_real_answer": bool(candidate_answer),

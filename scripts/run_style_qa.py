@@ -1,9 +1,25 @@
+import glob
 import argparse
 import pandas as pd
 from evaluators.style_rules import validate_row
 
-DEFAULT_INPUT_CSV = "data/processed/sft_augmented_dataset_promptC2_sample150_20260529.csv"
-DEFAULT_OUTPUT_CSV = "experiments/qa_results/style_validation_promptC2_sample150_20260529.csv"
+aug_files = sorted(
+    glob.glob("data/processed/sft_augmented_dataset_*.csv")
+)
+
+if not aug_files:
+    raise FileNotFoundError(
+        "augmentation 결과 CSV가 없습니다."
+    )
+
+DEFAULT_INPUT_CSV = aug_files[-1]
+from datetime import datetime
+
+run_tag = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+DEFAULT_OUTPUT_CSV = (
+    f"experiments/qa_results/style_validation_{run_tag}.csv"
+)
 
 
 def main(input_csv, output_csv):

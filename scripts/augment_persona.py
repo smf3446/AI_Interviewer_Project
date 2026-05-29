@@ -4,6 +4,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from getpass import getpass
+from dotenv import load_dotenv
+
 
 import pandas as pd
 from openai import OpenAI
@@ -12,6 +14,8 @@ from openai import OpenAI
 # =========================================================
 # 0. 설정
 # =========================================================
+
+
 
 PROJECT_DIR = "/smhrd/DaonTeam/Siyeong/daon_project"
 
@@ -28,7 +32,19 @@ run_tag = datetime.now().strftime("%Y%m%d_%H%M%S")
 # INPUT_CSV = f"{PROJECT_DIR}/data/samples/prompt_tuning_sample_150.csv"
 
 # 2. 전체 추출 데이터
-INPUT_CSV = f"{PROJECT_DIR}/data/processed/interview_extracted_20260529.csv"
+
+import glob
+
+extract_files = sorted(
+    glob.glob(f"{OUTPUT_DIR}/interview_extracted_*.csv")
+)
+
+if not extract_files:
+    raise FileNotFoundError(
+        "data/processed 안에 interview_extracted CSV가 없습니다."
+    )
+
+INPUT_CSV = extract_files[-1]
 
 OUTPUT_CSV = f"{OUTPUT_DIR}/sft_augmented_dataset_{PROMPT_VERSION}_{run_tag}.csv"
 
@@ -45,10 +61,11 @@ SAMPLE_SIZE = None
 # 1. OpenAI API Key 설정
 # =========================================================
 
-if "OPENAI_API_KEY" not in os.environ:
-    os.environ["OPENAI_API_KEY"] = getpass("OpenAI API Key 입력: ")
+load_dotenv()
 
-client = OpenAI()
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
 
 # =========================================================
