@@ -1,0 +1,6 @@
+packaging==26.0
+openai
+pandas
+tqdm
+tenacity
+scikit-learn
