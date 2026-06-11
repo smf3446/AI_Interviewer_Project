@@ -1,219 +1,190 @@
-# 프로젝트 개발 가이드
+# AI 면접 시뮬레이터
 
-## 개발 환경
+ICT 직무 면접 시뮬레이터의 LLM 학습 및 평가 파이프라인입니다.
+Qwen2.5-7B-Instruct / Qwen3.5-9B 모델에 압박(Pressure) / 친화(Friendly) 면접관 페르소나 LoRA 어댑터를 학습하고, 프롬프트 엔지니어링 및 평가를 수행합니다.
 
-### Python 버전
+> 팀 협업 및 개발 환경 설정은 [CONTRIBUTING.md](./CONTRIBUTING.md)를 참고하세요.
 
-본 프로젝트는 아래 버전을 기준으로 개발합니다.
+---
+
+## LoRA 어댑터
+
+허깅페이스에서 다운로드할 수 있습니다.
+
+레포지토리 주소 : **[teems79/interview-lora](https://huggingface.co/teems79/interview-lora)**
+
+| 어댑터 | 설명 |
+|--------|------|
+| `qwen2.5/pressure` | Qwen2.5-7B-Instruct 압박 면접관 LoRA |
+| `qwen2.5/friendly` | Qwen2.5-7B-Instruct 친화 면접관 LoRA |
+| `qwen3.5/pressure` | Qwen3.5-9B 압박 면접관 LoRA |
+| `qwen3.5/friendly` | Qwen3.5-9B 친화 면접관 LoRA |
+
+---
+
+## 실행 환경
+
+| 구분 | 환경 | 용도 |
+|------|------|------|
+| 학습 / 추론 | A100 40GB (SSH, MIG 3g.40gb) | LoRA 학습, 하이퍼파라미터 탐색, 추론 |
+| 평가 / 분석 | Google Colab (L4 GPU) | A/B 테스트, 프롬프트 엔지니어링, LLM-as-a-Judge, 시각화 |
+
+> SSH 환경은 GPU 공유로 인한 OOM 발생 가능성이 있어, 평가 및 분석 작업은 Colab에서 진행하였습니다.
+
+---
+
+## 프로젝트 구조
+
+```
+daon_ai_train/
+│
+├── src/                             # 핵심 학습 및 평가 코드
+│   ├── train_lora.py                # LoRA 파인튜닝 (Pressure / Friendly 순차 학습)
+│   ├── hyperparameter_search.py     # Optuna TPE 하이퍼파라미터 탐색
+│   ├── inference.py                 # Qwen2.5-7B 추론 (Multi-LoRA 스와핑)
+│   ├── inference_9B.py              # Qwen3.5-9B 추론
+│   ├── inference_cpu.py             # CPU 환경 추론
+│   ├── convert_to_gguf.py           # GGUF 변환
+│   ├── prompt_engineering.ipynb     # 프롬프트 엔지니어링 v1~v12 [Colab]
+│   ├── AB_Test.ipynb                # A/B 강약 프롬프트 테스트 [Colab]
+│   ├── AB_Test_evaluation.ipynb     # Rule Pass Rate / Style Score 평가 [Colab]
+│   ├── llm_as_a_judge.ipynb         # LLM-as-a-Judge Pairwise Win Rate 분석 [Colab]
+│   └── four_quadrants.ipynb         # 4사분면 모델 성능 시각화 [Colab]
+│
+├── scripts/                         # 데이터 전처리 및 증강
+│   ├── augment_persona.py           # GPT 기반 페르소나 데이터 증강
+│   ├── extract_neutral_followups.py # 중립 꼬리질문 추출
+│   └── run_style_qa.py              # 스타일 QA 자동 평가 파이프라인
+│
+├── evaluators/
+│   └── style_rules.py               # Pressure / Friendly 룰 기반 평가 기준 정의
+│
+├── experiments/                     # 하이퍼파라미터 탐색 및 프롬프트 실험 결과
+│   ├── hyperparam_results.csv       # Optuna 탐색 결과
+│   ├── prompt_scores.csv            # 프롬프트 버전별 평가 점수
+│   ├── prompt_evolution_summary.txt # 프롬프트 개선 이력 요약
+│   ├── qwen2.5_hyperparameter.txt   # Qwen2.5 최적 하이퍼파라미터
+│   └── qwen3.5_hyperparameter.txt   # Qwen3.5 최적 하이퍼파라미터
+│
+├── prompts/                         # 프롬프트 버전 관리
+│   ├── final_pressure.txt           # 최종 압박 페르소나 프롬프트
+│   ├── final_friendly.txt           # 최종 친화 페르소나 프롬프트
+│   ├── prompt_versions_pressure.txt # 압박 페르소나 프롬프트 변경 이력
+│   ├── prompt_versions_friendly.txt # 친화 페르소나 프롬프트 변경 이력
+│   ├── prompt_baseline_summary.txt  # 프롬프트 엔지니어링 baseline 총정리
+│   └── prompt_changelog.txt         # 프롬프트 엔지니어링 변경점 총정리
+│
+├── data/
+│   ├── processed/                   # 전처리 및 증강 완료 데이터
+│   ├── raw/                         # 원본 데이터
+│   ├── samples/                     # 샘플 데이터
+│   └── splits/                      # train / val / test split
+│
+├── training/                        # 학습 설정 및 Unsloth 관련
+│   ├── configs/
+│   └── unsloth/
+│
+├── embedding.py                     # OpenAI 임베딩 + 클러스터링 기반 데이터 분할
+├── requirements.txt
+├── CONTRIBUTING.md                  # 개발 환경 및 협업 규칙
+└── README.md
+```
+
+---
+
+## 파이프라인
+
+### 1. 데이터 증강
 
 ```bash
-Python 3.10
+python scripts/augment_persona.py
 ```
 
-버전 확인:
+GPT-4o-mini를 활용하여 ICT 직무 면접 질문에 대한 지원자 답변 및 페르소나별 꼬리질문을 비동기 병렬로 생성합니다.
+Pressure / Friendly 페르소나 각각에 대해 vague, logical, experience_based 등 6가지 답변 유형을 생성합니다.
+
+### 2. 데이터 분할
 
 ```bash
-python --version
+python embedding.py
 ```
 
----
+OpenAI 임베딩 + AgglomerativeClustering + GroupShuffleSplit을 사용하여
+의미적으로 유사한 데이터가 동일 split에 집중되지 않도록 분할합니다.
 
-# 초기 세팅 방법
-
-## 1. 프로젝트 클론
+### 3. LoRA 학습
 
 ```bash
-git clone <repository-url>
-cd <project-name>
+python src/train_lora.py
 ```
 
----
+Unsloth QLoRA를 사용하여 Pressure / Friendly 페르소나 어댑터를 순차 학습합니다.
 
-## 2. 가상환경(venv) 생성
+| 모델 | LoRA Rank | Learning Rate | Trainable Params |
+|------|-----------|---------------|-----------------|
+| Qwen2.5-7B-Instruct | 32 | 1e-4 | 80.7M (1.05%) |
+| Qwen3.5-9B | 8 | 2e-4 | 14.5M (0.15%) |
 
-Mac / Linux:
+- Optimizer: AdamW (cosine scheduler)
+- Effective Batch Size: 16 (batch 4 × gradient accumulation 4)
+- Early Stopping: patience=3 (eval_loss 기준)
+
+### 4. 하이퍼파라미터 탐색
 
 ```bash
-python3.10 -m venv venv
+python src/hyperparameter_search.py
 ```
 
-Windows:
+Optuna TPE 탐색으로 LoRA rank, learning rate, batch size 최적값을 탐색합니다.
+탐색 결과는 `experiments/` 디렉토리에 저장됩니다.
+
+### 5. 추론
 
 ```bash
-py -3.10 -m venv venv
+# Qwen2.5-7B (Multi-LoRA 스와핑)
+python src/inference.py
+
+# Qwen3.5-9B
+python src/inference_9B.py
 ```
 
----
-
-## 3. 가상환경 활성화
-
-Mac / Linux:
+### 6. 스타일 QA 평가
 
 ```bash
-source venv/bin/activate
+python scripts/run_style_qa.py
 ```
 
-Windows PowerShell:
-
-```powershell
-venv\Scripts\Activate.ps1
-```
-
-활성화 성공 시 터미널 앞에 `(venv)` 표시가 나타납니다.
+룰 기반 검증기(Style Rules)를 통해 모델 출력의 규칙 준수율을 자동 평가합니다.
 
 ---
 
-## 4. 패키지 설치
+## 평가 지표
 
-```bash
-pip install -r requirements.txt
-```
-
----
-
-# 패키지(requirements) 관리 규칙
-
-## 새로운 패키지를 설치한 경우
-
-예시:
-
-```bash
-pip install fastapi
-```
-
-패키지 설치 후 반드시 requirements.txt를 업데이트합니다.
-
-```bash
-pip freeze > requirements.txt
-```
-
-그 후 GitHub에 함께 커밋합니다.
+| 지표 | 설명 |
+|------|------|
+| Style Score | Pressure / Friendly 룰 준수 종합 점수 |
+| Rule Pass Rate | sentence / question / forbidden / end / korean 규칙별 통과율 |
+| Win Rate | LLM-as-a-Judge Pairwise 양방향 평가 승률 (position bias 보정) |
+| Hard Fail Rate | 중국어 혼입 / 프롬프트 유출 / 한국어 비율 미달 발생률 |
+| Reference Similarity | 모델 출력과 reference output 간 코사인 유사도 |
 
 ---
 
-# Git 브랜치 규칙
+## 주요 결과
 
-## 브랜치 구조
+LLM-as-a-Judge Pairwise 평가 (GPT-5, 양방향 position bias 보정) 결과:
 
-```text
-main      : 최종 배포 브랜치
-develop   : 통합 개발 브랜치
-feature/* : 개인 작업 브랜치
-```
-
-예시:
-
-```bash
-git checkout -b feature/login-api
-```
+| 순위 | 모델 | Win Rate |
+|------|------|----------|
+| 1 | Qwen3.5-9B-LoRA | 81.09% |
+| 2 | Qwen2.5-7B-Base | 48.40% |
+| 3 | Qwen2.5-7B-LoRA | 37.50% |
+| 4 | Qwen3.5-9B-Base | 33.01% |
 
 ---
 
-# 작업 규칙
-
-* main 브랜치 직접 push 금지
-* 반드시 feature 브랜치에서 작업
-* 작업 완료 후 Pull Request(PR) 생성
-* 작업 시작 전 최신 코드 pull 받기
-
-예시:
-
-```bash
-git pull origin develop
-```
-
----
-
-# 업로드 금지 파일
-
-아래 파일들은 `.gitignore`로 관리됩니다.
-
-```text
-venv/
-node_modules/
-.env
-__pycache__/
-```
-
-특히 아래 정보는 절대 업로드 금지:
-
-* API KEY
-* 비밀번호
-* 개인 환경설정 파일
-* 인증서 파일
-
----
-
-# 환경 변수(.env)
-
-각자 `.env` 파일을 생성해서 사용합니다.
-
-예시:
-
-```env
-OPENAI_API_KEY=
-MONGO_URI=
-JWT_SECRET=
-```
-
----
-
-# 권장 작업 순서
-
-```text
-1. 최신 코드 pull
-2. feature 브랜치 생성
-3. 기능 개발
-4. commit
-5. push
-6. Pull Request 생성
-```
-
----
-
-# Commit 메시지 규칙
-
-예시:
-
-```text
-feat: 로그인 기능 추가
-fix: 토큰 오류 수정
-refactor: 챗봇 로직 개선
-docs: README 수정
-```
-
----
-
-# 문제 발생 시
-
-## 패키지 오류 발생
-
-아래 명령어로 다시 설치:
+## 의존성 설치
 
 ```bash
 pip install -r requirements.txt
 ```
-
----
-
-## venv 활성화가 안 된 경우
-
-터미널 앞에 아래 표시가 있는지 확인:
-
-```text
-(venv)
-```
-
-없다면 다시 활성화합니다.
-
----
-
-# 팀 협업 규칙
-
-아래 사항 변경 시 팀원들과 반드시 공유해주세요.
-
-* 새로운 패키지 설치
-* API 구조 변경
-* 환경 변수 추가
-* DB 구조 변경
-* requirements.txt 변경
