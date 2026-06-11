@@ -172,7 +172,8 @@ python scripts/run_style_qa.py
 
 ## 주요 결과
 
-LLM-as-a-Judge Pairwise 평가 (GPT-5, 양방향 position bias 보정) 결과:
+### LLM-as-a-Judge Pairwise (표현 품질)
+GPT-5 양방향 평가 (position bias 보정)
 
 | 순위 | 모델 | Win Rate |
 |------|------|----------|
@@ -181,6 +182,17 @@ LLM-as-a-Judge Pairwise 평가 (GPT-5, 양방향 position bias 보정) 결과:
 | 3 | Qwen2.5-7B-LoRA | 37.50% |
 | 4 | Qwen3.5-9B-Base | 33.01% |
 
+### Rule Pass Rate (형식 준수율)
+시스템이 요구하는 출력 규칙 준수 여부 측정
+
+| 모델 | Style Score | sentence | question | end | korean |
+|------|------------|----------|----------|-----|--------|
+| Qwen3.5-9B-LoRA | 74.44% | 100% | 84.21% | 52.64% | 53.38% |
+| Qwen2.5-7B-Base | 75.22% | 96.99% | 71.43% | 20.11% | 94.74% |
+| Qwen2.5-7B-LoRA | 73.28% | 98.87% | 73.31% | 18.42% | 78.38% |
+| Qwen3.5-9B-Base | 61.31% | 92.30% | 63.72% | 22.56% | 44.74% |
+
+> Win Rate는 출력의 자연스러움과 표현 품질을, Rule Pass Rate는 시스템이 요구하는 출력 형식 준수 여부를 측정하며 두 지표는 상호 보완적으로 해석한다.
 ---
 
 ## 의존성 설치
