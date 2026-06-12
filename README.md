@@ -165,7 +165,7 @@ daon_ai_train/
 python scripts/augment_persona.py
 ```
 
-GPT-4o-mini를 활용하여 ICT 직무 면접 질문에 대한 지원자 답변 및 페르소나별 꼬리질문을 ThreadPoolExecutor 기반 병렬 처리로 생성합니다.
+GPT-4o-mini를 활용하여 ICT 직무 면접 질문에 대한 지원자 답변 및 페르소나별 꼬리질문을<br> ThreadPoolExecutor 기반 병렬 처리로 생성합니다.
 Pressure / Friendly 페르소나 각각에 대해 vague, logical, experience_based 등 6가지 답변 유형을 생성합니다.
 
 ### 2. 데이터 분할
@@ -257,7 +257,7 @@ GPT-5 양방향 평가 (position bias 보정)
 | Qwen2.5-7B-Base | 61.68% | 96.99% | 71.43% | 20.11% | 94.74% |
 | Qwen3.5-9B-Base | 54.92% | 92.30% | 63.72% | 22.56% | 44.74% |
 
-> Win Rate는 출력의 자연스러움과 표현 품질을, Rule Pass Rate는 시스템이 요구하는 출력 형식 준수 여부를 측정하며 두 지표는 상호 보완적으로 해석해야 합니다.
+> Win Rate는 출력의 자연스러움과 표현 품질을,<br> Rule Pass Rate는 시스템이 요구하는 출력 형식 준수 여부를 측정하며 두 지표는 상호 보완적으로 해석해야 합니다.
 > 
 ---
 
