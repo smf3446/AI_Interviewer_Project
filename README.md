@@ -5,6 +5,8 @@
 - 데이터 수집 및 파인튜닝
 - prompt engineering 및 judge 모델 구현
 - 데이터 전처리 및 평가 지표 설계
+→ 데이터 증강, LoRA 파인튜닝, 프롬프트 엔지니어링, 평가(LLM-as-a-Judge, Rule-based)에 이르는<br>
+  각 단계별 스크립트를 작성하고 연계하여 모델 학습·평가 워크플로우를 수행하였다.
 
 # 면접 경험이 부족한 취준생을 위한 <br> AI 면접 시뮬레이터 (Qwen2.5-7B QLoRA 파인튜닝)
 
@@ -302,6 +304,7 @@ pip install -r requirements.txt
 
 1. 프롬프트 및 LoRA 반복 개선
 - 프롬프트를 v1 ~ v12까지 반복 개선하며 출력 안정성을 개선하였다.<br>
+  중국어 혼입 문제는 LoRA fine-tuning을 통해 chinese_rate 3~7%에서 0%대로 감소시켰다.<br>
   다만 모델 크기(7B / 9B)에 따른 최적 프롬프트 차이는 충분히 반영되지 못한 한계가 존재하였다.
 
 2. 평가 지표 계산 로직 수정
@@ -310,7 +313,7 @@ pip install -r requirements.txt
 
 3. Pairwise 평가 bias 보정
 - 모든 모델 쌍에 대해 A/B 순서를 교차한 양방향 평가(총 624회)를 수행하고 결과를 평균하여<br>
-  position bias를 보정하였다.
+  position bias를 보정하였다. (A/B 선택 비율 61.8:38.2 → 51.6:48.4로 개선)
 
 4. LoRA NaN 문제 분석 및 처리
 - tokenizer 및 입력 길이 분석을 통해 입력 구조 문제 가능성을 배제하였다.<br>
@@ -336,3 +339,6 @@ pip install -r requirements.txt
 
 4. decoding 안정성 개선
 -  min_new_tokens, eos behavior 제어 등 decoding 안정화 전략 적용이 필요하다.
+
+> 프로젝트를 통해 LLM 기반 생성 모델의 평가 불안정성과 bias 문제를 실험적으로 확인하고,<br>
+> 이를 데이터/프롬프트/평가 구조 개선을 통해 단계적으로 해결하는 경험을 쌓았다.
