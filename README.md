@@ -18,6 +18,12 @@ ICT 직무 면접 시뮬레이터의 LLM 학습 및 평가 파이프라인입니
 
 ---
 
+## 시스템 아키텍처
+
+![아키텍처](./images/architecture.png)
+
+---
+
 ## 프로젝트 기간
 
 | 구분 | 기간 | 활동 |
@@ -55,6 +61,8 @@ ICT 직무 면접 시뮬레이터의 LLM 학습 및 평가 파이프라인입니
 
 
 ---
+
+![파이프라인 구조](./images/pipeline.png)
 
 ```text
 파이프라인 구조
@@ -186,6 +194,8 @@ OpenAI 임베딩 + AgglomerativeClustering + GroupShuffleSplit을 사용하여
 
 ### 3. LoRA 학습
 
+![학습 eval_loss](./images/eval_loss.png)
+
 ```bash
 python src/train_lora.py
 ```
@@ -266,6 +276,14 @@ GPT-5 양방향 평가 (position bias 보정)
 
 > Win Rate는 출력의 자연스러움과 표현 품질을,<br> Rule Pass Rate는 시스템이 요구하는 출력 형식 준수 여부를 측정하며 두 지표는 상호 보완적으로 해석해야 합니다.
 > 
+---
+
+## 배포 화면
+
+| 메인 화면 | 면접 진행 | 피드백 리포트 |
+|---|---|---|
+| ![simulator1](./images/simulator_1.png) | ![simulator2](./images/simulator_2.png) | ![simulator3](./images/simulator_3.png) |
+
 ---
 
 ## 의존성 설치
