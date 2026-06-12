@@ -202,6 +202,8 @@ OpenAI 임베딩 + AgglomerativeClustering + GroupShuffleSplit을 사용하여
 
 ![학습 eval_loss](./images/eval_loss.png)
 
+Qwen2.5-7B-Instruct (압박형 페르소나) 학습 결과, train_loss가 2.19(step 10)에서 0.42(step 190)로, eval_loss는 2.49에서 0.66으로 함께 감소하여 과적합 없이 안정적으로 수렴하였다.
+
 ```bash
 python src/train_lora.py
 ```
@@ -280,8 +282,9 @@ GPT-5 양방향 평가 (position bias 보정)
 | Qwen2.5-7B-Base | 61.68% | 96.99% | 71.43% | 20.11% | 94.74% |
 | Qwen3.5-9B-Base | 54.92% | 92.30% | 63.72% | 22.56% | 44.74% |
 
-> Win Rate는 출력의 자연스러움과 표현 품질을,<br> Rule Pass Rate는 시스템이 요구하는 출력 형식 준수 여부를 측정하며 두 지표는 상호 보완적으로 해석해야 합니다.
-> 
+> Win Rate는 출력의 자연스러움과 표현 품질을,<br> Rule Pass Rate는 시스템이 요구하는 출력 형식 준수 여부를 측정하며 두 지표는 상호 보완적으로 해석해야 함
+
+Qwen3.5-9B-LoRA의 한국어 비율(53.38%)은 언어 결함이 아니라, ICT 전문 용어(API, REST, JSON 등) 사용과 파인튜닝 후 응답이 간결해진 결과(평균 응답 길이 54.1자 → 21.0자)로 인한 수치적 특성으로 해석됨
 ---
 
 ## 배포 화면
